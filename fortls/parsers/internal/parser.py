@@ -841,17 +841,19 @@ def find_external(
 
 
 class FortranFile:
-    def __init__(self, path: str = None, pp_suffixes: list = None):
+    def __init__(
+        self, path: str = None, pp_suffixes: list = None, preproc: bool = None
+    ):
         self.path: str = path
         self.contents_split: list[str] = []
         self.contents_pp: list[str] = []
         self.pp_defs: dict = {}
         self.nLines: int = 0
         self.fixed: bool = False
-        self.preproc: bool = False
+        self.preproc: bool = preproc if preproc is not None else False
         self.ast: FortranAST = None
         self.hash: str = None
-        if path:
+        if path and preproc is None:
             _, file_ext = os.path.splitext(os.path.basename(path))
             if pp_suffixes:
                 self.preproc = file_ext in pp_suffixes
@@ -2261,7 +2263,7 @@ def preprocess_file(
                     break
             if include_path is not None:
                 try:
-                    include_file = FortranFile(include_path)
+                    include_file = FortranFile(include_path, preproc=True)
                     err_string, _ = include_file.load_from_disk()
                     if err_string is None:
                         log.debug("\n!!! Parsing include file '%s'", include_path)
