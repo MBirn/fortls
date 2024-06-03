@@ -1319,8 +1319,10 @@ class LangServer:
                 return
             # Update include statements linking to this file
             for _, tmp_file in self.workspace.items():
-                tmp_file.ast.resolve_includes(self.workspace, path=path)
-            file_obj.ast.resolve_includes(self.workspace)
+                tmp_file.ast.resolve_includes(
+                    self.workspace, path=path, search_dirs=self.include_dirs
+                )
+            file_obj.ast.resolve_includes(self.workspace, search_dirs=self.include_dirs)
             # Update inheritance (currently file only)
             # tmp_file.ast.resolve_links(self.obj_tree, self.link_version)
         elif file_obj.preproc:
@@ -1358,10 +1360,12 @@ class LangServer:
             return
         if did_change:
             # Update include statements linking to this file
-            for _, file_obj in self.workspace.items():
-                file_obj.ast.resolve_includes(self.workspace, path=filepath)
+            # for _, file_obj in self.workspace.items():
+            #     file_obj.ast.resolve_includes(
+            #         self.workspace, path=filepath, search_dirs=self.include_dirs
+            #     )
             file_obj = self.workspace.get(filepath)
-            file_obj.ast.resolve_includes(self.workspace)
+            file_obj.ast.resolve_includes(self.workspace, search_dirs=self.include_dirs)
             # Update inheritance/links
             self.link_version = (self.link_version + 1) % 1000
             for _, file_obj in self.workspace.items():
@@ -1502,7 +1506,7 @@ class LangServer:
                 self.obj_tree[key] = [ast_new.global_dict[key], path]
         # Update include statements
         for _, file_obj in self.workspace.items():
-            file_obj.ast.resolve_includes(self.workspace)
+            file_obj.ast.resolve_includes(self.workspace, search_dirs=self.include_dirs)
         # Update inheritance/links
         self.link_version = (self.link_version + 1) % 1000
         for _, file_obj in self.workspace.items():

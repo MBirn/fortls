@@ -251,13 +251,31 @@ class FortranAST:
 
         return current
 
-    def resolve_includes(self, workspace, path: str | None = None):
-        file_dir = os.path.dirname(self.path)
+    def resolve_includes(
+        self, workspace, path: str | None = None, search_dirs: list[str] = []
+    ):
+        search_dirs = [os.path.dirname(self.path)] + list(search_dirs)
+        filter_basename = os.path.basename(path) if path else None
         for inc in self.include_statements:
-            file_path = os.path.normpath(os.path.join(file_dir, inc.path))
+            if filter_basename and not (filter_basename == os.path.basename(inc.path)):
+                continue
+            if inc.file:
+                file_path = inc.file.path
+            else:
+                if os.path.isabs(inc.path):
+                    file_path = os.path.normpath(inc.path)
+                else:
+                    file_path = None
+                    for dir in search_dirs:
+                        search_path = os.path.join(dir, inc.path)
+                        if os.path.isfile(search_path):
+                            file_path = os.path.normpath(search_path)
+                            break
             if path and path != file_path:
                 continue
             parent_scope = self.get_inner_scope(inc.line_number)
+            if parent_scope is None:
+                continue
             added_entities = inc.scope_objs
             if file_path in workspace:
                 include_file = workspace[file_path]
