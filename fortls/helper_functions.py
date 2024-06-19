@@ -99,7 +99,7 @@ def detect_fixed_format(file_lines: list[str]) -> bool:
         if tmp_match and tmp_match.start(1) < 6:
             return False
         # Trailing ampersand indicates free or intersection format
-        if not FRegex.FIXED_COMMENT.match(line):
+        if len(line) >= 6 and not line[5] == "&" and not FRegex.FIXED_COMMENT.match(line):
             line_end = line.split("!")[0].strip()
             if len(line_end) > 0 and line_end.endswith("&"):
                 return False
