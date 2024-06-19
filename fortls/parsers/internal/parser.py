@@ -301,9 +301,13 @@ def read_fun_def(
         a named tuple
     """
     # Get all the keyword modifier mathces
-    keywords = re.findall(FRegex.SUB_MOD, line)
-    # remove modifiers from line
-    line = re.sub(FRegex.SUB_MOD, "", line)
+    lower = line.casefold()
+    if "pure" in lower or "elemental" in lower or "recursive" in lower:
+        keywords = re.findall(FRegex.SUB_MOD, line)
+        # remove modifiers from line
+        line = re.sub(FRegex.SUB_MOD, "", line)
+    else:
+        keywords = []
 
     # Try and get the result type
     # Recursively will call read_var_def which will then call read_fun_def
@@ -347,9 +351,14 @@ def read_sub_def(
         a SUB_info dataclass object
     """
     # Get all the keyword modifier matches
-    keywords = re.findall(FRegex.SUB_MOD, line)
-    # remove modifiers from line
-    line = re.sub(FRegex.SUB_MOD, "", line)
+    lower = line.casefold()
+    if "pure" in lower or "elemental" in lower or "recursive" in lower:
+        keywords = re.findall(FRegex.SUB_MOD, line)
+        # remove modifiers from line
+        line = re.sub(FRegex.SUB_MOD, "", line)
+    else:
+        keywords = []
+
     name, args, _ = get_procedure_modifiers(line, FRegex.SUB)
     if name is None:
         return None
@@ -376,6 +385,9 @@ def read_do_def(line: str) -> tuple[Literal["do"], str] | None:
     tuple[Literal["do"], str] | None
         Tuple with "do" and a fixed format tag if present
     """
+    if not "do" in line.casefold():
+        return None
+    
     line_stripped = strip_strings(line, maintain_len=True)
     line_no_comment = line_stripped.split("!")[0].rstrip()
     do_match = FRegex.DO.match(line_no_comment)
@@ -392,6 +404,9 @@ def read_where_def(line: str) -> tuple[Literal["where"], bool] | None:
     tuple[Literal["where"], bool] | None
         Tuple with "where" and a boolean indicating if labelled on unlabelled
     """
+    if not "where"in line.casefold():
+        return None
+    
     line_stripped = strip_strings(line, maintain_len=True)
     line_no_comment = line_stripped.split("!")[0].rstrip()
     # Match WHERE blocks
@@ -416,6 +431,10 @@ def read_if_def(line: str) -> tuple[Literal["if"], None] | None:
     tuple[Literal["if"], None] | None
         A Literal "if" and None tuple
     """
+    lower = line.casefold()
+    if not "if" in lower and not "then" in lower:
+        return None
+
     line_stripped = strip_strings(line, maintain_len=True)
     line_no_comment = line_stripped.split("!")[0].rstrip()
     if FRegex.IF.match(line_no_comment) and FRegex.THEN.search(line_no_comment):
@@ -436,6 +455,10 @@ def read_associate_def(line: str):
 
 def read_select_def(line: str):
     """Attempt to read SELECT definition line"""
+    lower = line.casefold()
+    if not "select" in lower and not "type" in lower and not "class" in lower:
+        return None
+    
     select_match = FRegex.SELECT.match(line)
     select_desc = None
     select_binding = None
@@ -548,6 +571,9 @@ def read_generic_def(line: str):
 
 def read_mod_def(line: str):
     """Attempt to read MODULE and MODULE PROCEDURE, MODULE FUNCTION definition lines"""
+    if not "module" in line.casefold():
+        return None
+    
     # Get all the keyword modifier mathces
     keywords = re.findall(FRegex.SUB_MOD, line)
     # remove modifiers from line
@@ -2215,7 +2241,7 @@ def preprocess_file(
             continue
         stack_is_true = all(scope[0] < 0 for scope in pp_stack)
         # Handle variable/macro definitions files
-        match = FRegex.PP_DEF.match(line)
+        match = None if not stack_is_true else FRegex.PP_DEF.match(line)
         if (match is not None) and stack_is_true:
             output_file.append(line)
             pp_defines.append(i + 1)
@@ -2250,7 +2276,7 @@ def preprocess_file(
             log.debug("%s !!! Define statement(%d)", line.strip(), i + 1)
             continue
         # Handle include files
-        match = FRegex.PP_INCLUDE.match(line)
+        match = None if not stack_is_true else FRegex.PP_INCLUDE.match(line)
         if (match is not None) and stack_is_true:
             log.debug("%s !!! Include statement(%d)", line.strip(), i + 1)
             include_filename = match.group(1).replace('"', "")

@@ -93,10 +93,12 @@ def detect_fixed_format(file_lines: list[str]) -> bool:
         if line.startswith("#") or pp_continue:
             pp_continue = line.rstrip().endswith("\\")
             continue
-        if FRegex.FREE_FORMAT_TEST.match(line):
+        starts_empty = line.startswith("    ")
+        if not starts_empty and FRegex.FREE_FORMAT_TEST.match(line):
             return False
-        tmp_match = FRegex.VAR.match(line)
-        if tmp_match and tmp_match.start(1) < 6:
+        starts_empty = starts_empty and len(line) > 5 and line[5] == " "
+        tmp_match = not starts_empty and FRegex.VAR.match(line)
+        if tmp_match and tmp_match.start(1) < 6: # first group (so after initial white space) has to start before 6th column
             return False
         # Trailing ampersand indicates free or intersection format
         if len(line) >= 6 and not line[5] == "&" and not FRegex.FIXED_COMMENT.match(line):
