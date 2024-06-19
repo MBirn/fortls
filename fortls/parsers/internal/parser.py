@@ -2056,6 +2056,7 @@ def preprocess_file(
     pp_defs: dict = None,
     include_dirs: set = None,
     debug: bool = False,
+    generate_output_file = True,
 ):
     # Look for and mark excluded preprocessor paths in file
     # Initial implementation only looks for "if" and "ifndef" statements.
@@ -2143,7 +2144,8 @@ def preprocess_file(
     for i, line in enumerate(contents_split):
         # Handle multiline macro continuation
         if def_cont_name is not None:
-            output_file.append("")
+            if generate_output_file:
+                output_file.append("")
             is_multiline = line.strip()[-1] != "\\"
             line_to_append = line.strip() if is_multiline else line[0:-1].strip()
             defs_tmp[def_cont_name] = append_multiline_macro(
@@ -2155,7 +2157,8 @@ def preprocess_file(
         # Handle conditional statements
         match = FRegex.PP_REGEX.match(line)
         if match:
-            output_file.append(line)
+            if generate_output_file:
+                output_file.append(line)
             def_name = None
             if_start = False
             # Opening conditional statements
@@ -2243,7 +2246,8 @@ def preprocess_file(
         # Handle variable/macro definitions files
         match = None if not stack_is_true else FRegex.PP_DEF.match(line)
         if (match is not None) and stack_is_true:
-            output_file.append(line)
+            if generate_output_file:
+                output_file.append(line)
             pp_defines.append(i + 1)
             def_name = match.group(2)
             # If this is an argument list of a function add them to the name
@@ -2301,6 +2305,7 @@ def preprocess_file(
                             pp_defs=defs_tmp,
                             include_dirs=include_dirs,
                             debug=debug,
+                            generate_output_file=False,
                         )
                         log.debug("!!! Completed parsing include file\n")
 
@@ -2342,5 +2347,6 @@ def preprocess_file(
                     value,
                 )
                 line = line_new
-        output_file.append(line)
+        if generate_output_file:
+            output_file.append(line)
     return output_file, pp_skips, pp_defines, defs_tmp
