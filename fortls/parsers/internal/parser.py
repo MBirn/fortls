@@ -1358,6 +1358,8 @@ class FortranFile:
                 match = FRegex.END_WORD.match(line_no_comment)
                 # Handle end statement
                 if self.parse_end_scope_word(line_no_comment, line_no, file_ast, match):
+                    if line_label and len(block_id_stack) > 0 and line_label == block_id_stack[-1]:
+                        block_id_stack.pop()
                     continue
                 # Look for old-style end of DO loops with line labels
                 if self.parse_do_fixed_format(
