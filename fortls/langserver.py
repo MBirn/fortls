@@ -1385,7 +1385,7 @@ class LangServer:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = FortranFile(filepath, self.pp_suffixes)
+                    file_obj = FortranFile(filepath, self.pp_suffixes, fixed_extensions=self.fixed_extensions)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         if allow_empty:
@@ -1434,6 +1434,7 @@ class LangServer:
         pp_suffixes: list[str],
         include_dirs: set[str],
         sort: bool,
+        fixed_extensions: list[str]
     ):
         """Initialise a Fortran file
 
@@ -1449,13 +1450,15 @@ class LangServer:
             Preprocessor only include directories, not used by normal parser
         sort : bool
             Whether or not keywords should be sorted
+        fixed_extensions : list[str]
+            File extension to be parsed as fixed form fortran
 
         Returns
         -------
         fortran_file | str
             A Fortran file object or a string containing the error message
         """
-        file_obj = FortranFile(filepath, pp_suffixes)
+        file_obj = FortranFile(filepath, pp_suffixes, fixed_extensions=fixed_extensions)
         err_str, _ = file_obj.load_from_disk()
         if err_str:
             return err_str
@@ -1488,6 +1491,7 @@ class LangServer:
                     self.pp_suffixes,
                     self.include_dirs,
                     self.sort_keywords,
+                    self.fixed_extensions
                 ),
             )
         pool.close()
@@ -1644,6 +1648,7 @@ class LangServer:
 
     def _load_config_file_preproc(self, config_dict: dict) -> None:
         self.pp_suffixes = config_dict.get("pp_suffixes", None)
+        self.fixed_extensions = config_dict.get("fixed_extensions", None)
         self.pp_defs = config_dict.get("pp_defs", {})
         if isinstance(self.pp_defs, list):
             self.pp_defs = {key: "" for key in self.pp_defs}

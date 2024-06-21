@@ -421,10 +421,10 @@ def debug_parser(args):
     separator()
 
     ensure_file_accessible(args.debug_filepath)
-    pp_suffixes, pp_defs, include_dirs = read_config(args.debug_rootpath, args.config)
+    pp_suffixes, pp_defs, include_dirs, fixed_extensions = read_config(args.debug_rootpath, args.config)
 
     print(f'  File = "{args.debug_filepath}"')
-    file_obj = FortranFile(args.debug_filepath, pp_suffixes)
+    file_obj = FortranFile(args.debug_filepath, pp_suffixes, fixed_extensions=fixed_extensions)
     err_str, _ = file_obj.load_from_disk()
     if err_str:
         raise DebugError(f"Reading file failed: {err_str}")
@@ -465,7 +465,7 @@ def debug_preprocessor(args):
         lines = f.readlines()
 
     root = args.debug_rootpath if args.debug_rootpath else os.path.dirname(file)
-    _, pp_defs, include_dirs = read_config(root, args.config)
+    _, pp_defs, include_dirs, fixed_extensions = read_config(root, args.config)
 
     sep_lvl2("Preprocessor Pass:")
     output, skips, defines, defs = preprocess_file(
@@ -529,19 +529,21 @@ def read_config(root: str | None, input_config: str):
     pp_suffixes = None
     pp_defs = {}
     include_dirs = set()
+    fixed_extensions = None
     if root is None:
-        return pp_suffixes, pp_defs, include_dirs
+        return pp_suffixes, pp_defs, include_dirs, fixed_extensions
 
     # Check for config files
     config_path = locate_config(root, input_config)
     print(f"  Config file = {config_path}")
     if config_path is None or not os.path.isfile(config_path):
-        return pp_suffixes, pp_defs, include_dirs
+        return pp_suffixes, pp_defs, include_dirs, fixed_extensions
 
     try:
         with open(config_path, encoding="utf-8") as fhandle:
             config_dict = json5.load(fhandle)
             pp_suffixes = config_dict.get("pp_suffixes", None)
+            fixed_extensions = config_dict.get("fixed_extensions", None)
             pp_defs = config_dict.get("pp_defs", {})
             for path in config_dict.get("include_dirs", set()):
                 include_dirs.update(only_dirs(resolve_globs(path, root)))
@@ -551,7 +553,7 @@ def read_config(root: str | None, input_config: str):
     except ValueError as e:
         print(f"Error {e} while parsing '{config_path}' settings file")
 
-    return pp_suffixes, pp_defs, include_dirs
+    return pp_suffixes, pp_defs, include_dirs, fixed_extensions
 
 
 def debug_generic(args, test_label, lsp_request, format_results, loc_needed=True):

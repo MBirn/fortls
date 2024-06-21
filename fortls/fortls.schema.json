@@ -161,6 +161,14 @@
       "type": "array",
       "uniqueItems": true
     },
+    "fixed_extensions": {
+      "default": [],
+      "description": "File extensions to be parsed as fixed form fortran. All other files will be assumed to be free form.",
+      "items": {},
+      "title": "Fixed Extensions",
+      "type": "array",
+      "uniqueItems": true
+    },
     "include_dirs": {
       "default": [],
       "description": "Folders containing preprocessor files with extensions PP_SUFFIXES.",

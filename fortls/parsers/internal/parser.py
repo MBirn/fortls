@@ -868,7 +868,7 @@ def find_external(
 
 class FortranFile:
     def __init__(
-        self, path: str = None, pp_suffixes: list = None, preproc: bool = None
+        self, path: str = None, pp_suffixes: list = None, preproc: bool = None, fixed_extensions: list = None
     ):
         self.path: str = path
         self.contents_split: list[str] = []
@@ -877,6 +877,7 @@ class FortranFile:
         self.nLines: int = 0
         self.fixed: bool = False
         self.preproc: bool = preproc if preproc is not None else False
+        self.fixed_extensions = fixed_extensions
         self.ast: FortranAST = None
         self.hash: str = None
         if path and preproc is None:
@@ -929,7 +930,14 @@ class FortranFile:
 
             self.hash = hash
             self.contents_split = contents.splitlines()
-            self.fixed = detect_fixed_format(self.contents_split)
+
+
+            if self.fixed_extensions is not None:
+                _, file_ext = os.path.splitext(os.path.basename(self.path))
+                self.fixed = file_ext in self.fixed_extensions
+            else:
+                self.fixed = detect_fixed_format(self.contents_split)
+
             self.contents_pp = self.contents_split
             self.nLines = len(self.contents_split)
             return None, True
@@ -1038,7 +1046,11 @@ class FortranFile:
         self.contents_pp = self.contents_split
         self.nLines = len(self.contents_split)
         if detect_format:
-            self.fixed = detect_fixed_format(self.contents_split)
+            if self.fixed_extensions is not None:
+                _, file_ext = os.path.splitext(os.path.basename(self.path))
+                self.fixed = file_ext in self.fixed_extensions
+            else:
+                self.fixed = detect_fixed_format(self.contents_split)
 
     def get_line(self, line_no: int, pp_content: bool = False) -> str:
         """Get single line from file"""

@@ -146,6 +146,15 @@ def cli(name: str = "fortls") -> argparse.ArgumentParser:
         help="Source file extensions to be excluded (default: %(default)s)",
     )
     group.add_argument(
+        "--fixed_extensions",
+        type=str,
+        nargs="*",
+        default=set(),
+        action=SetAction,
+        metavar="SUFFIXES",
+        help="Source file extensions to be parsed as fixed form Fortran.",
+    )
+    group.add_argument(
         "--excl_paths",
         type=str,
         nargs="*",
