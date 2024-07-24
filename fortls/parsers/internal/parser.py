@@ -2361,7 +2361,7 @@ def preprocess_file(
             if def_tmp not in line:
                 continue
             def_regex = def_regexes.get(def_tmp)
-            if def_regex is None:
+            if def_regex is None or isinstance(value, tuple):
                 if isinstance(value, tuple):
                     def_regex = expand_func_macro(def_tmp, value)
                 else:
