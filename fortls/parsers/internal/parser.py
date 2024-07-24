@@ -940,13 +940,10 @@ class FortranFile:
 
             _, file_ext = os.path.splitext(os.path.basename(self.path))
             if file_ext == ".F":
-                print("detect true")
                 self.fixed = True
             elif file_ext == ".F90":
-                print("detect false")
                 self.fixed = False
             else:
-                print("detect auto")
                 self.fixed = detect_fixed_format(self.contents_split)
 
             self.contents_pp = self.contents_split
@@ -1065,13 +1062,10 @@ class FortranFile:
 
             _, file_ext = os.path.splitext(os.path.basename(self.path))
             if file_ext == ".F":
-                print("detect true")
                 self.fixed = True
             elif file_ext == ".F90":
-                print("detect false")
                 self.fixed = False
             else:
-                print("detect auto")
                 self.fixed = detect_fixed_format(self.contents_split)
 
     def get_line(self, line_no: int, pp_content: bool = False) -> str:
