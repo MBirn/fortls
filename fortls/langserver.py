@@ -1480,8 +1480,20 @@ class LangServer:
 
         file_list = self._get_source_files()
         # Process files
-        pool = Pool(processes=self.nthreads)
         results = {}
+        # single threaded:
+        # for filepath in file_list:
+        #     results[filepath] = self.file_init(
+        #             filepath,
+        #             self.pp_defs,
+        #             self.pp_suffixes,
+        #             self.include_dirs,
+        #             self.sort_keywords,
+        #         )
+        #
+        # multithreaded
+        #
+        pool = Pool(processes=self.nthreads)
         for filepath in file_list:
             results[filepath] = pool.apply_async(
                 self.file_init,
@@ -1496,6 +1508,7 @@ class LangServer:
             )
         pool.close()
         pool.join()
+        #
         for path, result in results.items():
             result_obj = result.get()
             if isinstance(result_obj, str):
